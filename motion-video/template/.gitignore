@@ -1,0 +1,6 @@
+node_modules/
+.venv/
+out/
+assets/shots/
+refs/*state*.json
+refs/profile*/

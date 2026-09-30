@@ -1,0 +1,15 @@
+{
+  "name": "motion-video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "preview": "python3 -m http.server 5173",
+    "stills": "node stills.mjs",
+    "render": "node render.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/inter": "^5.2.8",
+    "devices.css": "^0.2.0",
+    "playwright": "^1.63.0"
+  }
+}
