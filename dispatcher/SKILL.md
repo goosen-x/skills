@@ -1,9 +1,9 @@
 ---
-name: orchestrating-sonnet-subagents
+name: dispatcher
 description: Use when you're the lead agent on a multi-step coding task and are tempted to implement it yourself instead of delegating — splitting work across backend/frontend/test boundaries, deciding whether a subagent's "done" claim is trustworthy, or picking which model tier a spawned agent should run on.
 ---
 
-# Orchestrating Sonnet subagents
+# Dispatcher
 
 ## Overview
 
