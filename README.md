@@ -22,11 +22,11 @@ Claude Code, Cursor, Codex, Factory, Qwen и всё остальное, что �
 Склонировать репозиторий и закинуть симлинк в папку скиллов нужного инструмента:
 
 ```bash
-git clone https://github.com/goosen-x/skills.git ~/Documents/frontend/goose-labs/skills
-ln -s ~/Documents/frontend/goose-labs/skills/unslop ~/.agents/skills/unslop
+git clone https://github.com/goosen-x/skills.git
+ln -s "$PWD/skills/unslop" ~/.claude/skills/unslop
 ```
 
-`~/.agents/skills` — общая папка для Claude Code, Codex и Gemini CLI; туда же у меня подключены `frontend-design`, `vercel-react-best-practices` и другие общие скиллы, этот работает по той же схеме.
+`~/.claude/skills` — папка Claude Code, `~/.agents/skills` — общий путь, который понимают заодно Codex и Gemini CLI. Один клон репозитория, симлинк под каждый нужный скилл — обновления в репозитории подхватятся сами.
 
 ## Новый скилл
 
