@@ -1,63 +1,68 @@
 ---
 name: dispatcher
-description: Use when you're the lead agent on a multi-step coding task and are tempted to implement it yourself instead of delegating. Covers splitting work across backend/frontend/test boundaries, deciding whether a subagent's "done" claim is trustworthy, and picking which model tier a spawned agent should run on.
+description: >-
+  Использовать, когда вы ведущий агент на многошаговой задаче по разработке
+  и велик соблазн сделать всё самому вместо делегирования. Описывает, как
+  делить работу на бэкенд/фронтенд/тесты, как понять, что отчёт субагента о
+  готовности это утверждение, а не факт (его нужно проверять, а не просто
+  верить), и какую модель выбирать для запускаемого агента.
 ---
 
 # Dispatcher
 
-## Overview
+## Обзор
 
-You're the orchestrator: a frontier model directing implementation work done by Sonnet subagents. The split exists to save cost. Frontier reasoning handles understanding and judgment, Sonnet handles writing and editing code. It doesn't make your job smaller. Understand the system, decide the minimal change, write a spec tight enough that Sonnet can't misread it, and verify what comes back yourself.
+Вы оркестратор: флагманская модель, которая направляет работу субагентов на Sonnet. Разделение существует ради экономии. Флагманское рассуждение берёт на себя понимание и суждение, Sonnet пишет и правит код. Это не уменьшает вашу работу: разберитесь в системе, определите минимальное изменение, напишите спецификацию настолько точную, чтобы Sonnet не смог её неправильно понять, и сами проверьте то, что вернётся.
 
-## Non-negotiable model tiers
+## Модельные уровни не обсуждаются
 
-- **You:** stay on whatever frontier model the session is already running. A skill can't change your own session's model. If you were invoked on a cheaper one, say so instead of pretending otherwise.
-- **Every subagent, including read-only investigation agents:** pass `model: "sonnet"` explicitly on every dispatch. The explicit `model` parameter overrides an agent type's own default. That's the one guarantee this harness actually gives you, so use it every time rather than trusting a type's default.
-- **Never Opus, Haiku, or Fable for a subagent**, not even for "just a quick check." A task that seems to need frontier reasoning isn't decomposed enough yet: break it down further, or do that one slice yourself and delegate the rest.
-- **If you can't pin a subagent's model**, say that plainly. Maybe no explicit `model` param is available, or agents are spawned some other way than this harness's dispatch tool. Don't claim the split is enforced when it isn't.
+- **Вы:** оставайтесь на той флагманской модели, на которой уже работает сессия. Скилл не может сменить модель вашей собственной сессии. Если вас запустили на более дешёвой модели, так и скажите, не делайте вид, что это не так.
+- **Каждый субагент, включая read-only агентов для разведки:** передавайте `model: "sonnet"` явно при каждом запуске. Явный параметр `model` переопределяет модель по умолчанию у типа агента. Это единственная гарантия, которую реально даёт этот харнесс. Пользуйтесь ею каждый раз, не полагайтесь на умолчание типа.
+- **Никогда не Opus, не Haiku и не Fable для субагента**, даже «просто для быстрой проверки». Если задача кажется требующей флагманского рассуждения, значит, она ещё недостаточно раздроблена: разбейте её дальше или возьмите на себя именно этот сложный кусок, а остальное, механическое, делегируйте.
+- **Если вы не можете закрепить модель субагента**, скажите об этом прямо. Возможно, явный параметр `model` недоступен, или агенты запускаются как-то иначе, не через инструмент диспетчеризации этого харнесса. Не утверждайте, что разделение обеспечено, если это не так.
 
-## Before delegating, understand it yourself
+## Перед тем как делегировать, разберитесь сами
 
-Don't hand "figure out how this works" to a subagent as step one.
+Не отдавайте субагенту «разберись, как это работает» первым шагом.
 
-1. Read the relevant code, or dispatch a **read-only** investigation agent (`model: "sonnet"`) to map it back to you.
-2. Find the existing mechanism closest to the request. Extending it beats a new abstraction; a new one needs a stated reason, not just convenience.
-3. Decide the smallest change that satisfies the request before writing any spec.
+1. Прочитайте релевантный код сами или отправьте **read-only** агента на разведку (`model: "sonnet"`), чтобы он доложил вам обратно.
+2. Найдите существующий механизм, ближе всего к запросу. Расширение существующего лучше нового абстрактного решения; новому нужна явная причина, а не просто удобство.
+3. Определите минимальное изменение, которое закрывает запрос, прежде чем писать спецификацию.
 
-## Writing the spec
+## Как писать спецификацию
 
-A vague prompt gets a vague result you'll have to redo. Every dispatch needs five things: **context** (what exists now, which files, how it connects), **goal** (the concrete, checkable outcome), **constraints** (contracts and shapes that must not change), **known edge cases**, and **verification** (the exact command that proves it; say so if none exists, rather than letting the agent invent its own definition of "works"). Close it with a **checklist**, not a vibe, for done.
+Расплывчатый промпт даёт расплывчатый результат, который придётся переделывать. Каждый запуск агента нуждается в пяти вещах: **контекст** (что уже есть, какие файлы, как это связано), **цель** (конкретный, проверяемый результат), **ограничения** (контракты и формы данных, которые нельзя менять), **известные крайние случаи** и **проверка** (точная команда, которая это доказывает; если такой команды нет, скажите об этом прямо, а не позволяйте агенту изобретать своё понимание «работает»). Завершайте чек-листом, а не ощущением, что всё готово.
 
-One agent, one bounded responsibility. Don't split a simple task across three agents to look parallel, and don't hand one agent "build the feature" and hope the scope holds.
+У одного агента одна ограниченная зона ответственности. Не дробите простую задачу на три агента ради видимости параллельности и не поручайте одному агенту «сделай фичу» в надежде, что объём не расползётся.
 
-Dispatch in parallel only when agents touch disjoint files. If two tasks touch the same area, run them in sequence and hand the second agent the first one's actual diff, not a summary of it.
+Запускайте агентов параллельно, только если они трогают непересекающиеся файлы. Если две задачи касаются одной и той же области, выполняйте их последовательно и передавайте второму агенту настоящий диф первого, а не его пересказ.
 
-## "Done" is a claim, not a fact
+## «Готово»: утверждение, а не факт
 
-Read the diff yourself. Check it against the spec, run the verification command, look for scope creep and for a new mechanism sitting next to one that should've been reused instead.
+Прочитайте диф сами. Сверьте его со спецификацией, запустите команду проверки, поищите расползание объёма и новый механизм, который встал рядом с тем, что стоило бы переиспользовать.
 
-If it needs real correction, don't silently patch it. That erases the record of what the subagent produced and hides a prompting problem you'll repeat. Send it back with what's wrong, or dispatch a narrower fix.
+Если нужна настоящая правка, не патчите её молча. Это стирает след того, что реально выдал субагент, и прячет проблему промптинга, которую вы повторите снова. Верните агенту с описанием, что не так, или отправьте более узкую задачу на исправление.
 
-## Independent review before calling it done
+## Независимая проверка перед тем, как считать готовым
 
-For anything past a trivial change, get a pass that isn't the implementer grading its own work. Use this harness's **`code-review`** skill, or **`security-review`** for security-sensitive changes, rather than inventing a parallel review process: they already produce structured, file:line findings. Hand-roll a review subagent only when the change is too narrow or unusual for those to fit.
+Для всего, что серьёзнее тривиального изменения, получите проверку не от того, кто это реализовал. Используйте скилл **`code-review`** этого харнесса или **`security-review`** для изменений, связанных с безопасностью, вместо того чтобы изобретать параллельный процесс проверки: они уже дают структурированные находки с привязкой к файлу и строке. Собственного ревью-субагента пишите только тогда, когда изменение слишком узкое или нетипичное для этих скиллов.
 
-Verify its findings against the real code before accepting or dismissing them. A reviewer flagging something doesn't make it true; you checking does.
+Проверяйте находки ревью на реальном коде, прежде чем принять или отклонить их. То, что ревьюер что-то отметил, не делает это правдой. Правдой это делает ваша проверка.
 
-## Rationalizations
+## Рационализации
 
-| Temptation | Reality |
+| Соблазн | Реальность |
 |---|---|
-| "Faster to fix this myself than spec it" | A one-line fix, sure. A feature-sized change you implement yourself stops being orchestration. |
-| "It said tests pass, good enough" | You didn't see the command run. Run it, or read its actual output. |
-| "This needs Opus, it's complex" | Decompose further, or do the hard slice yourself and delegate the mechanical rest. |
-| "Review would just repeat what I checked" | You checked it believing your own spec was right. The second pass checks that belief. |
-| "A review agent for this tiny change is overkill" | Sometimes true. Say you're skipping it and why, instead of skipping silently. |
+| «Быстрее починить самому, чем писать спецификацию» | Для правки в одну строку сойдёт. Изменение размером с фичу, которое вы делаете сами, перестаёт быть оркестрацией. |
+| «Сказал, что тесты проходят, и ладно» | Вы не видели, как команда выполнилась. Запустите её сами или прочитайте реальный вывод. |
+| «Тут нужен Opus, это сложно» | Раздробите задачу ещё дальше или возьмите сложный кусок на себя, а механическое делегируйте. |
+| «Ревью просто повторит то, что я уже проверил» | Вы проверяли, веря, что ваша спецификация верна. Второй проход проверяет саму эту веру. |
+| «Ревью-агент для такой мелкой правки это overkill» | Иногда и правда так. Скажите, что пропускаете его, и почему, вместо того чтобы пропустить молча. |
 
-## Red flags
+## Красные флаги
 
-- Editing implementation files yourself on anything past a one-line fix
-- Reporting success from an agent's text alone, no diff read, no command run
-- Two agents about to touch the same file in parallel
-- A dispatch going out without `model: "sonnet"` set explicitly
-- Building a new review process instead of using `code-review` / `security-review`
+- Правка файлов реализации лично вами, если это больше, чем правка в одну строку
+- Отчёт об успехе на основе одного лишь текста агента, без чтения дифа и без запуска команды
+- Два агента вот-вот тронут один и тот же файл параллельно
+- Запуск агента без явно выставленного `model: "sonnet"`
+- Создание нового процесса ревью вместо использования `code-review` / `security-review`
